@@ -1,16 +1,15 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>8.0.30703</ProductVersion>
-    <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{24AF57C6-CA9E-497D-8C7D-DFF55B8F07DC}</ProjectGuid>
+    <ProjectGuid>{2F731A1A-B866-4198-A3A8-FD742CFEE231}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Data.Mono</RootNamespace>
-    <AssemblyName>Data.Mono</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <RootNamespace>TurboDbDataAccess</RootNamespace>
+    <AssemblyName>TurboDbDataAccess</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -21,6 +20,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -29,26 +29,29 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="DataWeb.TurboDB.Native20.Provider, Version=5.14.0.0, Culture=neutral, PublicKeyToken=ee707c084c1d234c, processorArchitecture=x86" />
     <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\src\TurboDbDataAccess.cs">
-      <Link>TurboDbDataAccess.cs</Link>
-    </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TurboDbDataReader.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\amica.general\General.Mono\General.Mono.csproj">
-      <Project>{EE2C1D9F-9002-48EA-B13C-787CD2520786}</Project>
-      <Name>General.Mono</Name>
+    <ProjectReference Include="..\amica.model\Amica.Model\Amica.Model.csproj">
+      <Project>{2dcc5d8c-4eaf-4510-81cd-82ea79e303de}</Project>
+      <Name>Amica.Model</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\DataAccess\DataAccess.Core\DataAccess.Core.csproj">
+      <Project>{343489eb-b715-41c8-a946-bcfd0bbe1b12}</Project>
+      <Name>DataAccess.Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\SqlDataAccess\SqlDataAccess.csproj">
+      <Project>{3f7146af-f48c-4be1-9250-a2939d2ce5f9}</Project>
+      <Name>SqlDataAccess</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

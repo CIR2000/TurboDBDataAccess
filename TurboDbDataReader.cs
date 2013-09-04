@@ -11,7 +11,8 @@ namespace Amica.Data
 {
     public class TurboDbDataReader : SqlDataReader
     {
-        private TurboDBConnection defaultConn;
+        private TurboDBConnection _defaultConn;
+        //private string _currentDatabasePassword;
 
         /// <summary>
         /// 
@@ -35,9 +36,9 @@ namespace Amica.Data
         {
             DataSourceName = dataSourceName;
             Authentication = authentication;
-            defaultConn = new TurboDBConnection(DataSourceName);
-            defaultConn.ConnectionString = "Datasource=" + DataSourceName + ";Exclusive=False;";
-            defaultConn.Exclusive = false;
+            _defaultConn = new TurboDBConnection(DataSourceName);
+            _defaultConn.ConnectionString = "Datasource=" + DataSourceName + ";Exclusive=False;";
+            _defaultConn.Exclusive = false;
 
         }
 
@@ -57,19 +58,46 @@ namespace Amica.Data
             TurboDBConnection conn;
             string s = ParseFilters(request.Filters);
             if (request.DataSourceName != null && request.DataSourceName.Length > 0)
+            {
                 conn = new TurboDBConnection(request.DataSourceName);
+                conn.Exclusive = false;
+            }
             else
-                if (DataSourceName != null && DataSourceName.Length > 0)
-                    conn = new TurboDBConnection(DataSourceName);
-                else
-                    return null;    // TODO errore
-            conn.Exclusive = false;
+            {
+                if (_defaultConn.State != System.Data.ConnectionState.Open)
+                    if (DataSourceName != null && DataSourceName.Length > 0)
+                    {
+                        _defaultConn = new TurboDBConnection(DataSourceName);
+                        _defaultConn.Exclusive = false;
+                    }
+                    else
+                        return null;    // TODO generate error
+                conn = _defaultConn;
+            }
+
+            
+            // Event subscription
+            // conn.PasswordNeeded += turboDBConnection_PasswordNeeded;
             conn.Open();
 
             // System.Diagnostics.Debug.Print(s);
             return null;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        //private void turboDBConnection_PasswordNeeded(object sender, DataWeb.TurboDB.TurboDBPasswordNeededEventArgs e)
+        //{
+        //    if (DataSourcePassword != null && DataSourcePassword.Length > 0)
+        //    {
+        //        e.Password = DataSourcePassword;
+        //        e.Retry = true;
+        //    }
+        //}
+        
         /// <summary>
         /// 
         /// </summary>

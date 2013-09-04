@@ -35,8 +35,8 @@ namespace Amica.Data
         {
             DataSourceName = dataSourceName;
             Authentication = authentication;
-            defaultConn = new TurboDBConnection(dataSourceName);
-            defaultConn.ConnectionString = "";
+            defaultConn = new TurboDBConnection(DataSourceName);
+            defaultConn.ConnectionString = "Datasource=" + DataSourceName + ";Exclusive=False;";
             defaultConn.Exclusive = false;
 
         }
@@ -54,11 +54,18 @@ namespace Amica.Data
         /// <returns></returns>
         public override Response<T> Get<T>(GetRequest request)
         {
+            TurboDBConnection conn;
             string s = ParseFilters(request.Filters);
-            TurboDBConnection conn = new TurboDBConnection(request.DataSourceName);
-            conn.ConnectionString = "";
+            if (request.DataSourceName != null && request.DataSourceName.Length > 0)
+                conn = new TurboDBConnection(request.DataSourceName);
+            else
+                if (DataSourceName != null && DataSourceName.Length > 0)
+                    conn = new TurboDBConnection(DataSourceName);
+                else
+                    return null;    // TODO errore
             conn.Exclusive = false;
-            
+            conn.Open();
+
             // System.Diagnostics.Debug.Print(s);
             return null;
         }

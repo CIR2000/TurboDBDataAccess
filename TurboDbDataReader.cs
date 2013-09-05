@@ -7,7 +7,6 @@ using DataAccess;
 using DataWeb.TurboDB;
 using System.Data;
 
-
 namespace Amica.Data
 {
     public class TurboDbDataReader : SqlDataReader
@@ -83,12 +82,16 @@ namespace Amica.Data
 
             // TODO add try to handle if conversion to SqlGetRequest fail (can fail if objest isn't sqlgetrequest)
             // Set password from request or class properties
-            if (((SqlGetRequest)request).DataSourcePassword != null && ((SqlGetRequest)request).DataSourcePassword.Length > 0)
-                _currentDatabasePassword = ((SqlGetRequest)request).DataSourcePassword;
-            else if (DataSourcePassword != null && DataSourcePassword.Length > 0)
+            _currentDatabasePassword = null;
+            try
+            {
+                SqlGetRequest sqlreq = (SqlGetRequest)request;
+                _currentDatabasePassword = sqlreq.DataSourcePassword;                    
+            }
+            catch {}
+
+            if (_currentDatabasePassword == null)
                 _currentDatabasePassword = DataSourcePassword;
-            else
-                _currentDatabasePassword = "";
             
             // Event subscription
             conn.PasswordNeeded += turboDBConnection_PasswordNeeded;
@@ -98,7 +101,7 @@ namespace Amica.Data
             TurboDBDataAdapter apt = new TurboDBDataAdapter("SELECT * FROM " + request.Resource, conn);
             apt.Fill(list);
 
-            System.Diagnostics.Debug.Print("Record letti: " + list.Rows.Count);
+            System.Diagnostics.Debug.Print(DateTime.Now.ToString() + " Record letti: " + list.Rows.Count);
             return null;
         }
         
@@ -120,8 +123,11 @@ namespace Amica.Data
         /// <param name="e"></param>
         private void turboDBConnection_PasswordNeeded(object sender, DataWeb.TurboDB.TurboDBPasswordNeededEventArgs e)
         {
+            if (_currentDatabasePassword != null)
+            {
                 e.Password = _currentDatabasePassword;
                 e.Retry = true;
+            }
         }
 
     }

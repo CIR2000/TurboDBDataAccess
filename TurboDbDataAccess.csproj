@@ -35,6 +35,7 @@
     <Reference Include="DataWeb.TurboDB.Native20.Provider, Version=5.14.0.0, Culture=neutral, PublicKeyToken=ee707c084c1d234c, processorArchitecture=x86" />
     <Reference Include="System" />
     <Reference Include="System.Data" />
+    <Reference Include="System.XML" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />

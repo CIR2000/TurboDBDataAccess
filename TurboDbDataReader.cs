@@ -5,6 +5,7 @@ using Amica.Data;
 using Amica.Model;
 using DataAccess;
 using DataWeb.TurboDB;
+using System.Data;
 
 
 namespace Amica.Data
@@ -12,7 +13,7 @@ namespace Amica.Data
     public class TurboDbDataReader : SqlDataReader
     {
         private TurboDBConnection _defaultConn;
-        //private string _currentDatabasePassword;
+        private string _currentDatabasePassword;
 
         /// <summary>
         /// 
@@ -53,14 +54,18 @@ namespace Amica.Data
         /// <typeparam name="T"></typeparam>
         /// <param name="request"></param>
         /// <returns></returns>
-        public override Response<T> Get<T>(GetRequest request)
+        public override Response<T> Get<T>(IGetRequest request)
         {
             TurboDBConnection conn;
             string s = ParseFilters(request.Filters);
+            // System.Diagnostics.Debug.Print(s);
+
+            // Set (and open if needed) connection properly from request or class properties
             if (request.DataSourceName != null && request.DataSourceName.Length > 0)
             {
                 conn = new TurboDBConnection(request.DataSourceName);
                 conn.Exclusive = false;
+                conn.Open();
             }
             else
             {
@@ -69,18 +74,42 @@ namespace Amica.Data
                     {
                         _defaultConn = new TurboDBConnection(DataSourceName);
                         _defaultConn.Exclusive = false;
+                        _defaultConn.Open();
                     }
                     else
                         return null;    // TODO generate error
                 conn = _defaultConn;
             }
 
+            // TODO add try to handle if conversion to SqlGetRequest fail (can fail if objest isn't sqlgetrequest)
+            // Set password from request or class properties
+            if (((SqlGetRequest)request).DataSourcePassword != null && ((SqlGetRequest)request).DataSourcePassword.Length > 0)
+                _currentDatabasePassword = ((SqlGetRequest)request).DataSourcePassword;
+            else if (DataSourcePassword != null && DataSourcePassword.Length > 0)
+                _currentDatabasePassword = DataSourcePassword;
+            else
+                _currentDatabasePassword = "";
             
             // Event subscription
-            // conn.PasswordNeeded += turboDBConnection_PasswordNeeded;
-            conn.Open();
+            conn.PasswordNeeded += turboDBConnection_PasswordNeeded;
 
-            // System.Diagnostics.Debug.Print(s);
+            // Reading data from database
+            DataTable list = new DataTable();
+            TurboDBDataAdapter apt = new TurboDBDataAdapter("SELECT * FROM " + request.Resource, conn);
+            apt.Fill(list);
+
+            System.Diagnostics.Debug.Print("Record letti: " + list.Rows.Count);
+            return null;
+        }
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        public override Response<T> Get<T>(IGetRequestItem request)
+        {
             return null;
         }
 
@@ -89,24 +118,11 @@ namespace Amica.Data
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        //private void turboDBConnection_PasswordNeeded(object sender, DataWeb.TurboDB.TurboDBPasswordNeededEventArgs e)
-        //{
-        //    if (DataSourcePassword != null && DataSourcePassword.Length > 0)
-        //    {
-        //        e.Password = DataSourcePassword;
-        //        e.Retry = true;
-        //    }
-        //}
-        
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="request"></param>
-        /// <returns></returns>
-        public override Response<T> Get<T>(GetRequestItem request)
+        private void turboDBConnection_PasswordNeeded(object sender, DataWeb.TurboDB.TurboDBPasswordNeededEventArgs e)
         {
-            return null;
+                e.Password = _currentDatabasePassword;
+                e.Retry = true;
         }
+
     }
 }

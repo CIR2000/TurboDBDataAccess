@@ -55,42 +55,10 @@ namespace Amica.Data
         /// <returns></returns>
         public override Response<T> Get<T>(IGetRequest request)
         {
-            TurboDBConnection conn;
 
-            // Set (and open if needed) connection properly from request or class properties
-            if (request.DataSourceName != null && request.DataSourceName.Length > 0)
-            {
-                conn = new TurboDBConnection(request.DataSourceName);
-                conn.Exclusive = false;
-                conn.Open();
-            }
-            else
-            {
-                if (_defaultConn.State != System.Data.ConnectionState.Open)
-                    if (DataSourceName != null && DataSourceName.Length > 0)
-                    {
-                        _defaultConn = new TurboDBConnection(DataSourceName);
-                        _defaultConn.Exclusive = false;
-                        _defaultConn.Open();
-                    }
-                    else
-                        return null;    // TODO generate error
-                conn = _defaultConn;
-            }
-
-            // Set password from request or class properties
-            _currentDatabasePassword = null;
-            try
-            {
-                SqlGetRequest sqlreq = (SqlGetRequest)request;
-                _currentDatabasePassword = sqlreq.DataSourcePassword;                    
-            }
-            catch {}
-
-            if (_currentDatabasePassword == null)
-                _currentDatabasePassword = DataSourcePassword;
-            
-            // Event subscription
+            SetPassword(request);
+            TurboDBConnection conn = GetConnection(request);
+            // Event subscription for databases with table password
             conn.PasswordNeeded += turboDBConnection_PasswordNeeded;
 
             // Build SQL string
@@ -122,6 +90,48 @@ namespace Amica.Data
         public override Response<T> Get<T>(IGetRequestItem request)
         {
             return null;
+        }
+
+        private void SetPassword(IGetRequest request)
+        {
+            // Set password from request or class properties
+            _currentDatabasePassword = null;
+            try
+            {
+                SqlGetRequest sqlreq = (SqlGetRequest)request;
+                _currentDatabasePassword = sqlreq.DataSourcePassword;
+            }
+            catch { }
+
+            if (_currentDatabasePassword == null)
+                _currentDatabasePassword = DataSourcePassword;
+        }
+
+        private TurboDBConnection GetConnection(IGetRequest request)
+        {
+            TurboDBConnection conn;
+
+            // Set (and open if needed) connection properly from request or class properties
+            if (request.DataSourceName != null && request.DataSourceName.Length > 0)
+            {
+                conn = new TurboDBConnection(request.DataSourceName);
+                conn.Exclusive = false;
+                conn.Open();
+            }
+            else
+            {
+                if (_defaultConn.State != System.Data.ConnectionState.Open)
+                    if (DataSourceName != null && DataSourceName.Length > 0)
+                    {
+                        _defaultConn = new TurboDBConnection(DataSourceName);
+                        _defaultConn.Exclusive = false;
+                        _defaultConn.Open();
+                    }
+                    else
+                        return null;    // TODO generate error
+                conn = _defaultConn;
+            }
+            return conn;
         }
 
         /// <summary>

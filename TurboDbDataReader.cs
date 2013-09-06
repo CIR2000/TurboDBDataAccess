@@ -56,8 +56,6 @@ namespace Amica.Data
         public override Response<T> Get<T>(IGetRequest request)
         {
             TurboDBConnection conn;
-            string s = ParseFilters(request.Filters);
-            // System.Diagnostics.Debug.Print(s);
 
             // Set (and open if needed) connection properly from request or class properties
             if (request.DataSourceName != null && request.DataSourceName.Length > 0)
@@ -80,7 +78,6 @@ namespace Amica.Data
                 conn = _defaultConn;
             }
 
-            // TODO add try to handle if conversion to SqlGetRequest fail (can fail if objest isn't sqlgetrequest)
             // Set password from request or class properties
             _currentDatabasePassword = null;
             try
@@ -96,9 +93,20 @@ namespace Amica.Data
             // Event subscription
             conn.PasswordNeeded += turboDBConnection_PasswordNeeded;
 
+            // Build SQL string
+            string sqlSelect = "SELECT * FROM " + request.Resource;
+            string sqlFilter = ParseFilters(request.Filters);
+            string sqlOrder = ParseSorts(request.Sort);
+            if (sqlFilter != "")
+                sqlSelect += " WHERE " + sqlFilter;
+            if (sqlOrder != "")
+                sqlSelect += " ORDER BY " + sqlOrder;
+
+            System.Diagnostics.Debug.Print(sqlSelect);
+
             // Reading data from database
             DataTable list = new DataTable();
-            TurboDBDataAdapter apt = new TurboDBDataAdapter("SELECT * FROM " + request.Resource, conn);
+            TurboDBDataAdapter apt = new TurboDBDataAdapter(sqlSelect, conn);
             apt.Fill(list);
 
             System.Diagnostics.Debug.Print(DateTime.Now.ToString() + " Record letti: " + list.Rows.Count);

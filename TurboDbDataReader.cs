@@ -55,17 +55,7 @@ namespace Amica.Data
         /// <returns></returns>
         public override Response<T> Get<T>(IGetRequest request)
         {
-
-            SetPassword(request);
-            TurboDBConnection conn = GetConnection(request);
-            // Event subscription for databases with table password
-            conn.PasswordNeeded += turboDBConnection_PasswordNeeded;
-
-            // Reading data from database
-            DataTable list = new DataTable();
-            TurboDBDataAdapter apt = new TurboDBDataAdapter(BuildSqlString(request), conn);
-            apt.Fill(list);
-
+            DataTable list = GetDataTable(request);
             System.Diagnostics.Debug.Print(DateTime.Now.ToString() + " Record letti: " + list.Rows.Count);
             return null;
         }
@@ -79,6 +69,21 @@ namespace Amica.Data
         public override Response<T> Get<T>(IGetRequestItem request)
         {
             return null;
+        }
+
+        private DataTable GetDataTable(IGetRequest request)
+        {
+            SetPassword(request);
+            TurboDBConnection conn = GetConnection(request);
+            
+            // Event subscription for databases with table password
+            conn.PasswordNeeded += turboDBConnection_PasswordNeeded;
+
+            // Reading data from database
+            TurboDBDataAdapter apt = new TurboDBDataAdapter(BuildSqlString(request), conn);
+            DataTable list = new DataTable();
+            apt.Fill(list);
+            return list;
         }
 
         private void SetPassword(IGetRequest request)

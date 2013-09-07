@@ -91,8 +91,7 @@ namespace Amica.Data
                 _currentDatabasePassword = sqlreq.DataSourcePassword;
             }
             catch { }
-            if (_currentDatabasePassword == null)
-                _currentDatabasePassword = DataSourcePassword;
+            _currentDatabasePassword = _currentDatabasePassword == null ? _currentDatabasePassword = DataSourcePassword : null;
         }
 
         private TurboDBConnection GetConnection(IGetRequest request)

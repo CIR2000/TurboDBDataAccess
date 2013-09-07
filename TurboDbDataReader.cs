@@ -61,20 +61,9 @@ namespace Amica.Data
             // Event subscription for databases with table password
             conn.PasswordNeeded += turboDBConnection_PasswordNeeded;
 
-            // Build SQL string
-            string sqlSelect = "SELECT * FROM " + request.Resource;
-            string sqlFilter = ParseFilters(request.Filters);
-            string sqlOrder = ParseSorts(request.Sort);
-            if (sqlFilter != "")
-                sqlSelect += " WHERE " + sqlFilter;
-            if (sqlOrder != "")
-                sqlSelect += " ORDER BY " + sqlOrder;
-
-            System.Diagnostics.Debug.Print(sqlSelect);
-
             // Reading data from database
             DataTable list = new DataTable();
-            TurboDBDataAdapter apt = new TurboDBDataAdapter(sqlSelect, conn);
+            TurboDBDataAdapter apt = new TurboDBDataAdapter(BuildSqlString(request), conn);
             apt.Fill(list);
 
             System.Diagnostics.Debug.Print(DateTime.Now.ToString() + " Record letti: " + list.Rows.Count);
@@ -102,7 +91,6 @@ namespace Amica.Data
                 _currentDatabasePassword = sqlreq.DataSourcePassword;
             }
             catch { }
-
             if (_currentDatabasePassword == null)
                 _currentDatabasePassword = DataSourcePassword;
         }
@@ -135,11 +123,26 @@ namespace Amica.Data
         }
 
         /// <summary>
-        /// 
+        /// Build SQL string from request info
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void turboDBConnection_PasswordNeeded(object sender, DataWeb.TurboDB.TurboDBPasswordNeededEventArgs e)
+        /// <param name="request">Request from which to construct the SqlString</param>
+        private string BuildSqlString(IGetRequest request)
+        {
+            string sqlSelect = "SELECT * FROM " + request.Resource;
+            string sqlFilter = ParseFilters(request.Filters);
+            string sqlOrder = ParseSorts(request.Sort);
+            sqlSelect += sqlFilter != "" ? " WHERE " + sqlFilter : "";
+            sqlSelect += sqlFilter != "" ? " ORDER BY " + sqlOrder : "";
+            //System.Diagnostics.Debug.Print(sqlSelect);
+            return sqlSelect;
+        }
+
+        /// <summary>
+        /// Set password for table when called from PasswordNeeded event
+        /// </summary>
+        /// <param name="sender">Object that generated the event</param>
+        /// <param name="e">Event parameters object</param>
+        private void turboDBConnection_PasswordNeeded(object sender, TurboDBPasswordNeededEventArgs e)
         {
             if (_currentDatabasePassword != null)
             {

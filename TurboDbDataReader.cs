@@ -93,8 +93,7 @@ namespace Amica.Data
             _currentDatabasePassword = null;
             try
             {
-                SqlGetRequest sqlreq = (SqlGetRequest)request;
-                _currentDatabasePassword = sqlreq.DataSourcePassword;
+                _currentDatabasePassword = (string)request.GetType().GetProperty("DataSourcePassword").GetValue(request, null);
             }
             catch { }
             _currentDatabasePassword = _currentDatabasePassword == null ? _currentDatabasePassword = DataSourcePassword : null;

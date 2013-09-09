@@ -80,7 +80,8 @@ namespace Amica.Data
             conn.PasswordNeeded += turboDBConnection_PasswordNeeded;
 
             // Reading data from database
-            TurboDBDataAdapter apt = new TurboDBDataAdapter(BuildSqlString(request), conn);
+            string sqlString = request.GetType() == typeof(SqlGetRequestItem) ? BuildSqlIdString(request) : BuildSqlIdString(request);
+            TurboDBDataAdapter apt = new TurboDBDataAdapter(sqlString, conn);
             DataTable list = new DataTable();
             apt.Fill(list);
             return list;
@@ -138,6 +139,12 @@ namespace Amica.Data
             sqlSelect += sqlFilter != "" ? " WHERE " + sqlFilter : "";
             sqlSelect += sqlFilter != "" ? " ORDER BY " + sqlOrder : "";
             //System.Diagnostics.Debug.Print(sqlSelect);
+            return sqlSelect;
+        }
+
+        private string BuildSqlIdString(IGetRequest request)
+        {
+            string sqlSelect = "SELECT * FROM " + request.Resource + " WHERE id=" + request;
             return sqlSelect;
         }
 

@@ -17,19 +17,8 @@ namespace Amica.Data
         /// <summary>
         /// 
         /// </summary>
-        private Dictionary<Resources, string> Res = new Dictionary<Resources, string>()
-        {
-            { Resources.Accounts, "Utenti"},
-            { Resources.Companies, "Aziende"},
-            { Resources.Dashoard, ""},
-        };
-
-        /// <summary>
-        /// 
-        /// </summary>
         public TurboDbDataReader()
         {
-            ResourcesToData = Res;
         }
 
         public TurboDbDataReader(string dataSourceName, Authentication authentication) : this ()
@@ -41,11 +30,6 @@ namespace Amica.Data
             _defaultConn.Exclusive = false;
 
         }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        protected new Dictionary<Resources, string> ResourcesToData { get; set; }
 
         /// <summary>
         /// 

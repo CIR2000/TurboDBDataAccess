@@ -55,9 +55,14 @@ namespace Amica.Data
         /// <returns></returns>
         public override Response<T> Get<T>(IGetRequest request)
         {
-            DataTable list = GetDataTable(request);
-            System.Diagnostics.Debug.Print(DateTime.Now.ToString() + " Record letti: " + list.Rows.Count);
-            return null;
+            if (request is SqlGetRequest)
+            {
+                DataTable list = GetDataTable((SqlGetRequest)request);
+                System.Diagnostics.Debug.Print(DateTime.Now.ToString() + " Record letti: " + list.Rows.Count);
+                return null;
+            }
+            else 
+                return null;
         }
         
         /// <summary>
@@ -68,45 +73,36 @@ namespace Amica.Data
         /// <returns></returns>
         public override Response<T> Get<T>(IGetRequestItem request)
         {
-            return null;
+            if (request is SqlGetRequestItem)
+            {
+                SqlGetRequest req = (SqlGetRequest)request;
+                req.Filters.Add(new Filter("Id", Comparison.Equal, request.Id.ToString()));
+                DataTable list = GetDataTable(req);
+                System.Diagnostics.Debug.Print(DateTime.Now.ToString() + " Record letti: " + list.Rows.Count);
+                return null;
+            }
+            else
+                return null;
         }
 
-        private DataTable GetDataTable(IGetRequest request)
+        private DataTable GetDataTable (SqlGetRequest request)
         {
-            SetPassword(request);
-            TurboDBConnection conn = GetConnection(request);
-            
-            // Event subscription for databases with table password
-            conn.PasswordNeeded += turboDBConnection_PasswordNeeded;
-
             // Reading data from database
-            string sqlString = request.GetType() == typeof(SqlGetRequestItem) ? BuildSqlIdString(request) : BuildSqlIdString(request);
-            TurboDBDataAdapter apt = new TurboDBDataAdapter(sqlString, conn);
+            TurboDBConnection conn = GetConnection(request.DataSourceName, request.DataSourcePassword);
+            TurboDBDataAdapter apt = new TurboDBDataAdapter(BuildSqlString(request), conn);
             DataTable list = new DataTable();
             apt.Fill(list);
             return list;
         }
 
-        private void SetPassword(IGetRequest request)
-        {
-            // Set password from request or class properties
-            _currentDatabasePassword = null;
-            try
-            {
-                _currentDatabasePassword = (string)request.GetType().GetProperty("DataSourcePassword").GetValue(request, null);
-            }
-            catch { }
-            _currentDatabasePassword = _currentDatabasePassword == null ? _currentDatabasePassword = DataSourcePassword : null;
-        }
-
-        private TurboDBConnection GetConnection(IGetRequest request)
+        private TurboDBConnection GetConnection(string tbName, string pw)
         {
             TurboDBConnection conn;
 
             // Set (and open if needed) connection properly from request or class properties
-            if (request.DataSourceName != null && request.DataSourceName.Length > 0)
+            if (tbName != null && tbName.Length > 0)
             {
-                conn = new TurboDBConnection(request.DataSourceName);
+                conn = new TurboDBConnection(tbName);
                 conn.Exclusive = false;
                 conn.Open();
             }
@@ -123,6 +119,11 @@ namespace Amica.Data
                         return null;    // TODO generate error
                 conn = _defaultConn;
             }
+            // Set password from request or class properties
+            _currentDatabasePassword = pw != null ? pw : DataSourcePassword;
+            // Event subscription for databases with table password
+            conn.PasswordNeeded += turboDBConnection_PasswordNeeded;
+
             return conn;
         }
 
@@ -130,7 +131,7 @@ namespace Amica.Data
         /// Build SQL string from request info
         /// </summary>
         /// <param name="request">Request from which to construct the SqlString</param>
-        private string BuildSqlString(IGetRequest request)
+        private string BuildSqlString(SqlGetRequest request)
         {
             string sqlSelect = "SELECT * FROM " + request.Resource;
             string sqlFilter = ParseFilters(request.Filters);
@@ -138,12 +139,6 @@ namespace Amica.Data
             sqlSelect += sqlFilter != "" ? " WHERE " + sqlFilter : "";
             sqlSelect += sqlFilter != "" ? " ORDER BY " + sqlOrder : "";
             //System.Diagnostics.Debug.Print(sqlSelect);
-            return sqlSelect;
-        }
-
-        private string BuildSqlIdString(IGetRequest request)
-        {
-            string sqlSelect = "SELECT * FROM " + request.Resource + " WHERE id=" + request;
             return sqlSelect;
         }
 

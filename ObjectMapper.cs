@@ -23,6 +23,21 @@ namespace Amica.Data
             };
             dictMapper.Add(typeof(Company), dictObj);
 
+            // Mapper for Document
+            dictObj = new Dictionary<string, string>()
+            {
+                 { "Id", "Id"},
+                 { "Date", "Data"},
+                 { "Number", "NumeroParteNumerica"},
+                 { "NumberParam", "NumeroParteTesto"},
+                 { "ContacName", ""},
+                 { "Taxable", "TotaleImponibile"},
+                 { "NotTaxable", "TotaleEsente"},
+                 { "Tax", "TotaleImposta"},
+                 { "Total", "TotaleFattura"},
+            };
+            dictMapper.Add(typeof(Document), dictObj);
+
             // Mapper for others business objects - TODO
             // ...
         }

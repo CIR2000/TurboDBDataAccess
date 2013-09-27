@@ -126,13 +126,23 @@ namespace Amica.Data
         private void FillObject<T>(T obj, DataRow dr)
         {
             IList<PropertyInfo> props = new List<PropertyInfo>(obj.GetType().GetProperties());
-            string fieldName;
-            foreach (PropertyInfo prop in props)
+            string fieldName = null;
+            object value;
+            try
             {
-                //fieldName = om.GetFieldName(obj.GetType(), prop.Name);
-                fieldName = ObjectMapper.GetFieldName(obj.GetType(), prop.Name);
-                if (fieldName != null)
-                    prop.SetValue(obj, dr[fieldName], null);
+                foreach (PropertyInfo prop in props)
+                {
+                    fieldName = ObjectMapper.GetFieldName(obj.GetType(), prop.Name);
+                    if (fieldName != null)
+                    {
+                        value = dr[fieldName] is DBNull ? null : dr[fieldName];
+                        prop.SetValue(obj, (dr[fieldName] is double & prop.GetValue(obj) is decimal) ? Convert.ToDecimal(value) : value, null);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw ex;
             }
         }
 
